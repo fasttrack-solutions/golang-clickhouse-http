@@ -6,7 +6,7 @@
 package main
 
 import (
-	ch "github.com/leprosus/golang-clickhouse"
+ ch "github.com/leprosus/golang-clickhouse"
 )
 
 var (
@@ -14,11 +14,13 @@ var (
     pass = "clickhouse.pass"
     host = "clickhouse.host"
     port = 8123
+    // defaultDatabase is optional and only used if no database is specified
+    defaultDatabase = "my-clickhouse-database"
 )
 
 func init(){
-    conn := ch.New(host, port, user, pass)
-    
+    conn := ch.New(host, port, user, pass, &defaultDatabase)
+
     // Also you can preset maximum memory usage limit to execute one query
     conn.MaxMemoryUsage(4 * clickhouse.GigaByte)
 }
@@ -79,10 +81,10 @@ ch.Fatal(func(message string) {
 
 ```
 
-## Values escaping 
+## Values escaping
 
 ```go
-value := "Here	is tab. This is line comment --"
+value := "Here is tab. This is line comment --"
 escaped := clickhouse.Escape(value)
 fmt.Print(escaped) //Here\tis tab. This is line comment \-\-
 ```

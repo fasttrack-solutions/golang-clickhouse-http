@@ -24,17 +24,18 @@ const (
 type Conn struct {
 	Limiter
 
-	host           string
-	port           int
-	user           string
-	pass           string
-	maxMemoryUsage int32
-	connectTimeout int32
-	sendTimeout    int32
-	receiveTimeout int32
-	compression    int32
-	attemptsAmount uint32
-	attemptWait    uint32
+	host            string
+	port            int
+	user            string
+	pass            string
+	defaultDatabase *string
+	maxMemoryUsage  int32
+	connectTimeout  int32
+	sendTimeout     int32
+	receiveTimeout  int32
+	compression     int32
+	attemptsAmount  uint32
+	attemptWait     uint32
 }
 
 type Iter struct {
@@ -81,21 +82,22 @@ var cfg = config{
 		error: func(message string) {},
 		fatal: func(message string) {}}}
 
-func New(host string, port int, user string, pass string) *Conn {
+func New(host string, port int, user string, pass string, defaultDatabase *string) *Conn {
 	cfg.logger.info("Clickhouse is initialized")
 
 	return &Conn{
-		host:           host,
-		port:           port,
-		user:           user,
-		pass:           pass,
-		connectTimeout: -1,
-		receiveTimeout: -1,
-		sendTimeout:    -1,
-		maxMemoryUsage: -1,
-		compression:    -1,
-		attemptsAmount: 1,
-		attemptWait:    0}
+		host:            host,
+		port:            port,
+		user:            user,
+		pass:            pass,
+		defaultDatabase: defaultDatabase,
+		connectTimeout:  -1,
+		receiveTimeout:  -1,
+		sendTimeout:     -1,
+		maxMemoryUsage:  -1,
+		compression:     -1,
+		attemptsAmount:  1,
+		attemptWait:     0}
 }
 
 // Debug sets logger for debug
@@ -497,6 +499,10 @@ func (conn *Conn) doQuery(query string) (io.ReadCloser, error) {
 		req.Header.Set("Content-Type", "text/plain")
 		req.Header.Set("Pragma", "no-cache")
 		req.Header.Set("Cache-Control", "no-cache")
+
+		if conn.defaultDatabase != nil {
+			req.Header.Set("X-ClickHouse-Database", *conn.defaultDatabase)
+		}
 
 		req.Close = true
 
